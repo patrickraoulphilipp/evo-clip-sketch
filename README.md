@@ -2,7 +2,7 @@ Sketching with Evolutionary Algorithms and CLIP
 ===
 Implementation of *Evoltionary CLIP Sketches*, a gym-like environment for painting simple sketches and integration of an evolutionary algorithm to search a good solution for an input text. The repository uses OpenAI's CLIP (https://github.com/openai/CLIP) to parse the input text and calculate a reward/fitness for the gym environment and evolutionary algorithm.
 
-The work is related and inspired by Google Brain's *Modern Evolution Strategies for Creativity: Fitting Concrete Images and Abstract Concepts* (https://arxiv.org/pdf/2109.08857.pdf & https://github.com/google/brain-tokyo-workshop/tree/master/es-clip), and provides an easy to use and less costly image generation process, which is interesting to investigate.
+The work is inspired by Google Brain's *Modern Evolution Strategies for Creativity: Fitting Concrete Images and Abstract Concepts* (https://arxiv.org/pdf/2109.08857.pdf & https://github.com/google/brain-tokyo-workshop/tree/master/es-clip), which investigate a more complex image generation process. This repository provides an easy-to-use and challenging image generation process which can be efficiently run on CPUs.
 
 The available evolutionary algorithm for sketch finding is PGPE, a derivative-free policy gradient estimation algorithm (https://github.com/nnaisense/pgpelib). The algorithm works sufficiently better for this environment compared to standard evolutionary strategies (at least for my initial experiments), but I will add the code and configuration parameter to run these as well. The idea to test PGPE is also inspired by Google Brain's mentioned work.
 
