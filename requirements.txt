@@ -1,0 +1,7 @@
+numpy
+opencv-python
+torch
+gym
+Pillow
+git+https://github.com/openai/CLIP.git
+git+https://github.com/nnaisense/pgpelib.git#egg=pgpelib
