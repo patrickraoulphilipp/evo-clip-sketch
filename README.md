@@ -28,7 +28,7 @@ source venv/bin/activate
 pip install -r requirements.txt .
 ```
 
-5. Set parameters in sketch_config.py. For now, all relevant parameters are to be set in as dictionary. The most important ones to get started are target_words to set the textual goal for the sketch and max_steps to set the number of relative points to be selected. target_dir enables to set the target directory to save the best sketches in the process.
+5. Set parameters in config.py. For now, all relevant parameters are to be set in as dictionary. The most important ones to get started are target_words to set the textual goal for the sketch and max_steps to set the number of relative points to be selected. target_dir enables to set the target directory to save the best sketches in the process.
 
 ```
 config = {
@@ -39,8 +39,8 @@ config = {
 }
 ```
 
-6. Run evo.py to start the search process. You will a continuous stream of sketches that are being testes by the evolutionary algorithm. Only the sketches which improve the best global reward/fitness are saved.
+6. Run main.py to start the search process. You will a continuous stream of sketches that are being testes by the evolutionary algorithm. Only the sketches which improve the best global reward/fitness are saved.
 
 ```
-python evo.py
+python main.py
 ```
