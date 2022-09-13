@@ -34,7 +34,7 @@ pip install -r requirements.txt .
 config = {
     'target_words' : ['a kitten'],
     'max_steps' : 20,
-    'target_dir' : '/PATH/TO/FOLDER',
+    'target_dir' : '/PATH/TO/FOLDER/',
     ...
 }
 ```
