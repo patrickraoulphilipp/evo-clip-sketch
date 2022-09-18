@@ -22,18 +22,14 @@ class SketchEnv:
         self.past_points = []
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.clip_model, \
-        self.clip_preprocess = clip.load(
-                                        "ViT-B/32", 
-                                        device=self.device
-                               )
-      
+        self.clip_model, self.clip_preprocess = None, None
+
         self.target_dir = None
         self.target_shape = None
         self.max_steps = None
         self.target_words = None
         self.target_thickness = None
-        self.start_point_reduce_factor = None
+        self.factor_height, self.factor_width = None, None
 
     def reset(self):
         
@@ -79,30 +75,25 @@ class SketchEnv:
     def step(self,action):
 
         self.episode += 1
+               
         if len(self.last_points) == 0:
-            self.last_points.append(  # add starting point
-                                [
-                                    self.target_shape[0] // self.start_point_reduce_factor, 
-                                    self.target_shape[1]//self.start_point_reduce_factor
-                                ]
-            )
+            x_abs, y_abs = [np.clip(action[i] + .5, 0., 1.) for i in range(self.action_dim)]
+            point_abs = (x_abs * self.factor_width, int(y_abs * self.factor_height))
+            self.last_points.append(point_abs)
+        else:
+            last_point = self.last_points[-1]
+            x_change, y_change = [np.clip(action[i], -1., 1.) for i in range(self.action_dim)]
+            point_change = (int(x_change * self.factor_width), int(y_change * self.factor_height))
+            relative_point = (last_point[0] + point_change[0], last_point[1] - point_change[1])
+            relative_point = [
+                                np.clip(relative_point[i], 0., self.sketch.shape[i]) 
+                                for i in range(self.action_dim)
+                             ] #could check before this if values become to large or small
 
-        last_point = self.last_points[-1]
-        terminal = False if self.episode < self.max_steps else True
-        x, y = [np.clip(action[i], -1., 1.) for i in range(self.action_dim)]
-        height, width, _ = self.sketch.shape
-        factor_height, factor_width = height // self.line_factor, width // self.line_factor
-     
-        absolute_point = (int(x * factor_width), int(y * factor_height))
-        relative_point = (last_point[0] + absolute_point[0], last_point[1] - absolute_point[1])
-        relative_point = [
-                            np.clip(relative_point[i], 0., self.sketch.shape[i]) 
-                            for i in range(self.action_dim)
-                         ]
-
-        self.last_points.append(relative_point)
+            self.last_points.append(relative_point)
+        
         self.reward = 0.
-
+        terminal = False if self.episode < self.max_steps else True
         if terminal:
 
             blank_sketch = np.zeros(
@@ -122,7 +113,7 @@ class SketchEnv:
                                 color, 
                                 self.target_thickness
                             )
-
+                            
             self.reward = self.clip_reward()
             self._save_sketch()
         
@@ -130,7 +121,10 @@ class SketchEnv:
 
     def render(self):
       
-        cv2.imshow("sketch",self.sketch)
+        cv2.imshow(
+                'sketch for "{}"'.format(self.target_words[0]),
+                self.sketch
+        )
         cv2.waitKey(1)
     
     def _init_all(
@@ -139,32 +133,32 @@ class SketchEnv:
     ):
 
         self.max_steps = config['max_steps']
-        self.target_words = config['target_words']
+        self.target_words = [config['target_words']]
         self.target_shape = config['target_shape']
         self.target_thickness = config['target_thickness']
-        self.line_factor = config['line_factor']
+        point_reduction_factor = config['point_reduction_factor']
+        height, width, _ = self.target_shape
+        self.factor_height, self.factor_width = height // point_reduction_factor, width // point_reduction_factor
         self._set_target_dir(config['target_dir'])
         self.action_dim = config['num_actions']
         self.action_space = Box( # values should be between -1 and 1
                                 np.array([-1.] * self.action_dim), 
                                 np.array([1.] * self.action_dim)
                             )
-        self.start_point_reduce_factor = config['start_point_reduce_factor']
+        self.clip_model, \
+        self.clip_preprocess = clip.load(
+                                        config['clip_model'], 
+                                        device=self.device
+                               )
+      
         print("got config: {}".format(config))
 
     def _set_target_dir(self, dir):
 
         if dir is not None:
 
-            concat_target_words = ""
-            for word in self.target_words:
-                splitted = word.split(' ')
-                joined = "-".join(splitted)
-                concat_target_words = "-" + concat_target_words if len(concat_target_words) != 0 else concat_target_words
-                concat_target_words = concat_target_words + joined
-
+            concat_target_words = self._get_concatenated_word()
             new_dir = "{}{}/".format(dir, concat_target_words)
-
             try:
                 shutil.rmtree(new_dir)
             except:
@@ -179,4 +173,15 @@ class SketchEnv:
             path = '{}_{}_{}.png'.format(self.target_dir, self.reward, str(unix))
             cv2.imwrite(path, self.sketch)
             self.max_reward = self.reward
+
+    def _get_concatenated_word(self):
+
+        concat_target_words = ""
+        for word in self.target_words:
+            splitted = word.split(' ')
+            joined = "-".join(splitted)
+            concat_target_words = "-" + concat_target_words if len(concat_target_words) != 0 else concat_target_words
+            concat_target_words = concat_target_words + joined
+
+        return concat_target_words
 

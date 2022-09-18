@@ -29,6 +29,8 @@ def run_evo(
         start = time.time()
         solutions = pgpe.ask()
         fitnesses = []
+        min_stats = []
+        max_stats = []
         
         for solution in solutions:
             fitness = get_fitness_from_gym(
@@ -37,9 +39,18 @@ def run_evo(
                             config=config,
                        )
             fitnesses.append(fitness)
+            min_stats.append(np.min(solution))
+            max_stats.append(np.max(solution))
 
         pgpe.tell(fitnesses)      
-        print("Iteration:", i, "  median score:", np.median(fitnesses), "; max score: ", np.max(fitnesses), " (", time.time()-start, "s)")
+        print(
+                "Iteration:", i, 
+                "  median score:", np.median(fitnesses), 
+                "; max score: ", np.max(fitnesses), 
+                " (", time.time()-start, "s)",
+                "; min value: ", np.min(min_stats), 
+                "; max_value: ", np.max(max_stats)
+        )
 
 def get_fitness_from_gym(
         env=None,
